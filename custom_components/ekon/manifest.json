@@ -1,8 +1,8 @@
 {
-  "domain": "gree",
-  "name": "Gree A/C",
-  "documentation": "https://github.com/RobHofmann/HomeAssistant-GreeClimateComponent",
+  "domain": "ekon",
+  "name": "Ekon Wifi A/C Componenet",
+  "documentation": "https://github.com/hllhll/HomeAssistant-EKON-iAircon/",
   "dependencies": [],
-  "codeowners": ["@robhofmann"],
-  "requirements": ["pycryptodome"]
+  "codeowners": ["@hllhll"],
+  "requirements": []
 }
