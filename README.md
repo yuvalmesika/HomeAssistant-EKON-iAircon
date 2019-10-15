@@ -3,7 +3,7 @@ Using this component may effect your hass installation stability, may report fal
 
 IT MIGHT ALSO MESS APP THE REGULAR APP USAGE. In this case, you should remove the component and restart the iAircon box either by disconnecting it from the supply of the of the AC Controller and reconnect (i.e. the phone cord that doesn't go to the screen). Or by triping the switch in the electrical panel.
 
-**The integration was only tested against ["Airconet" from Ekon](https://play.google.com/store/apps/details?id=com.ekon.airconet.app) ("Main EKON Server") And has not been tested for "Tadiran connect" app ("Tadiran server").** For switching the app, follow the guidnce below.
+**The integration was only tested against ["Airconet" from Ekon](https://play.google.com/store/apps/details?id=com.ekon.airconet.app) ("Main EKON Server") And has not been tested for "Tadiran connect" app ("Tadiran server").** ~~For switching the app, follow the guidnce below.~~ That might not be needed, try just to put your Tadiran credentials in the Airconet app
 
 # What types of HVACs? / ACs?
 Short: Tadiran mini-central ACs, other iAircon/EKON/Airconet Based ACs
@@ -35,7 +35,7 @@ This component is NOT CURRENTLY added to HACS default repository list.
 
 1. Copy the custom_components folder to your own hassio /config folder.
 
-2. Choose the server you want to work with (AFAIK only Tadiran and EKON Main exist).
+2. **UPDATE: This may not be necessery i have recived reports that you could just log in with Aircon app even tough it's tadiran connect account so the primary server might just work "as-is"** Choose the server you want to work with (AFAIK only Tadiran and EKON Main exist).
    If you are using Airconet app you are currently using the EKON Main server
    If you are using Tadiran connect app you are currently using (what I call) EKON Tadiran server
 
