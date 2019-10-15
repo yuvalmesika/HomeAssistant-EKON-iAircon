@@ -25,7 +25,7 @@ Built on the bases of Gree Climate component for easier interfacing with HASS
 
 **Sources used:**
  - https://github.com/tomikaa87/gree-remote
- - https://github.com/vpnmaster/homeassistant-custom-components
+ - https://github.com/vpnmaster/homeassistant-om-components
  - https://developers.home-assistant.io/
  
 ## HACS
@@ -39,8 +39,10 @@ This component is NOT CURRENTLY added to HACS default repository list.
    If you are using Airconet app you are currently using the EKON Main server
    If you are using Tadiran connect app you are currently using (what I call) EKON Tadiran server
 
-3. If you want to work on a server OTHER then the one you are currently using, setup an account with the app, reset the wifi-controller-thing and pair it with the app and the new account.
-   For example, you might currently be using Tadiran connect app, but this component was only tested on the main server. Install "Airconet", login/create an account, on the tadiran connect electronics thing, press and hold the reset button. The button is reachabe via a hole in the plastic under the sticker. You can also open the plastic box carefully. Hold the buttun untill the led blinks in 2 colors (blue/purpule) the box is in pairing mode, now using the Airconet app, add it to your account.
+~~3. If you want to work on a server OTHER then the one you are currently using, setup an account with the app, reset the wifi-controller-thing and pair it with the app and the new account.
+   For example, you might currently be using Tadiran connect app, but this component was only tested on the main server. Install "Airconet", login/create an account, on the tadiran connect electronics thing, press and hold the reset button. The button is reachabe via a hole in the plastic under the sticker. You can also open the plastic box carefully. Hold the buttun untill the led blinks in 2 colors (blue/purpule) the box is in pairing mode, now using the Airconet app, add it to your account.~~ Nope, Guess this is not needed, Thanks @OrenA
+   
+3.1. Verify that HomeAssistant server has permissions to read custom_components folder. Recommended is 0744 (read everyone, write owner)
 
 4. In your configuration.yaml add the following:
 
@@ -75,6 +77,7 @@ This component is NOT CURRENTLY added to HACS default repository list.
     - No, It says Air condition is not connected to the internet / offline (or similar):
       The integration might screw up information on the vendor's server. Restart the Wifi box should solve it (See below).
     - Yes: Are you working with Tadiran app? or with Airconet app?
+      - Verify permissions on the custom_components and subfolders, best to set the read permissions to everyone. (Try 0744)
       - Tadiran: Did you switch the server url in the config file?
       - Tadiran: Try switching to Airconet app (See exactly how above Under installation-3); Btw you should anyway use the Airconet app (personal recomendation) 
       - Airconet: Verify username and password in the config. If still doesn't work, Turn on logs and send me :)
