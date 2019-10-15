@@ -3,7 +3,7 @@ Using this component may effect your hass installation stability, may report fal
 
 IT MIGHT ALSO MESS APP THE REGULAR APP USAGE. In this case, you should remove the component and restart the iAircon box either by disconnecting it from the supply of the of the AC Controller and reconnect (i.e. the phone cord that doesn't go to the screen). Or by triping the switch in the electrical panel.
 
-**The integration was only tested against ["Airconet" from Ekon] (https://play.google.com/store/apps/details?id=com.ekon.airconet.app) ("Main EKON Server") And has not been tested for "Tadiran connect" app ("Tadiran server").** For switching the app, follow the guidnce below.
+**The integration was only tested against ["Airconet" from Ekon](https://play.google.com/store/apps/details?id=com.ekon.airconet.app) ("Main EKON Server") And has not been tested for "Tadiran connect" app ("Tadiran server").** For switching the app, follow the guidnce below.
 
 # What types of HVACs? / ACs?
 Short: Tadiran mini-central ACs, other iAircon/EKON/Airconet Based ACs
@@ -54,9 +54,9 @@ This component is NOT CURRENTLY added to HACS default repository list.
      password: myPassword
      # This specifies the server that the component would work with, I have only tried it with EKON server (Airconet APP)
      # Optional, defults to Airconet server
-     # EKON main server
+     # Use this if you are using "Airconet" app - EKON main server
      base_url: https://www.airconet.info/
-     # EKON tadiran server
+     # **UNTESTED** Try to use this instead if you are using "Tadiran connect" app - EKON tadiran server
      # base_url: https://www.airconet.xyz/
    ```
 5. OPTIONAL: Add info logging to this component (to see if/how it works)
