@@ -1,3 +1,5 @@
+**Update: Just copy custom_components into /config folder, set custom_components permissions, and update your configuration.yaml with Either your EKON Account OR Tadiran connect account.**
+
 # NOTE THIS IS NOT FULLY TESTED, NO RESPONSIBILITY WHATSOEVER - READ Fully before installing
 Using this component may effect your hass installation stability, may report falsly the state of your HVAC, commands may seem to be working but they might not (such situation where u think you turned off the ac, but it didn't)
 
@@ -35,9 +37,9 @@ This component is NOT CURRENTLY added to HACS default repository list.
 
 1. Copy the custom_components folder to your own hassio /config folder.
 
-2. **UPDATE: This may not be necessery i have recived reports that you could just log in with Aircon app even tough it's tadiran connect account so the primary server might just work "as-is"** Choose the server you want to work with (AFAIK only Tadiran and EKON Main exist).
-   If you are using Airconet app you are currently using the EKON Main server
-   If you are using Tadiran connect app you are currently using (what I call) EKON Tadiran server
+2. **UPDATE: This may not be necessery i have recived reports that you could just log in with Aircon app even tough it's tadiran connect account so the primary server might just work "as-is"** ~~Choose the server you want to work with (AFAIK only Tadiran and EKON Main exist).~~
+   ~~If you are using Airconet app you are currently using the EKON Main server~~
+   ~~If you are using Tadiran connect app you are currently using (what I call) EKON Tadiran server~~
 
 ~~3. If you want to work on a server OTHER then the one you are currently using, setup an account with the app, reset the wifi-controller-thing and pair it with the app and the new account.
    For example, you might currently be using Tadiran connect app, but this component was only tested on the main server. Install "Airconet", login/create an account, on the tadiran connect electronics thing, press and hold the reset button. The button is reachabe via a hole in the plastic under the sticker. You can also open the plastic box carefully. Hold the buttun untill the led blinks in 2 colors (blue/purpule) the box is in pairing mode, now using the Airconet app, add it to your account.~~ Nope, Guess this is not needed, Thanks @OrenA
@@ -58,7 +60,7 @@ This component is NOT CURRENTLY added to HACS default repository list.
      # Optional, defults to Airconet server
      # Use this if you are using "Airconet" app - EKON main server
      base_url: https://www.airconet.info/
-     # **UNTESTED** Try to use this instead if you are using "Tadiran connect" app - EKON tadiran server
+     # **UNTESTED** Alternative EKON tadiran server
      # base_url: https://www.airconet.xyz/
    ```
 5. OPTIONAL: Add info logging to this component (to see if/how it works)
