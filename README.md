@@ -1,7 +1,9 @@
-# NOTE THIS IS NOT FULLY TESTED, NO RESPONSIBILITY WHATSOEVER
+# NOTE THIS IS NOT FULLY TESTED, NO RESPONSIBILITY WHATSOEVER - READ Fully before installing
 Using this component may effect your hass installation stability, may report falsly the state of your HVAC, commands may seem to be working but they might not (such situation where u think you turned off the ac, but it didn't)
 
 IT MIGHT ALSO MESS APP THE REGULAR APP USAGE. In this case, you should remove the component and restart the iAircon box either by disconnecting it from the supply of the of the AC Controller and reconnect (i.e. the phone cord that doesn't go to the screen). Or by triping the switch in the electrical panel.
+
+**The integration was only tested against ["Airconet" from Ekon] (https://play.google.com/store/apps/details?id=com.ekon.airconet.app) ("Main EKON Server") And has not been tested for "Tadiran connect" app ("Tadiran server").** For switching the app, follow the guidnce below.
 
 # What types of HVACs? / ACs?
 Short: Tadiran mini-central ACs, other iAircon/EKON/Airconet Based ACs
@@ -12,6 +14,9 @@ There's a compony out there Called EKON, They have a product named iAircon which
 Unfortunately, No API or documentation exist for this cloud service. This is where this repo comes in
 
 Israeli HVACs manefacturer "TADIRAN" Uses this ekon solution for their "Tadiran connect" product, designated for some of their "mini central hvacs"
+
+<img src="https://g-rafa.co.il/wp-content/uploads/2017/06/tadiran1-e1498462193178-1024x609.jpg" width="512px" height="305px" />
+<img src="https://lh3.googleusercontent.com/43-jwjJFMF1Q1ft6P7e6Su8wxygdrlRe1B5cY3o2dZAgACU-kYZ9Uql4cFVAuiGgdg=w1396-h686-rw" width="193px" height="343px" />
 
 # HomeAssistant-HomeAssistant-EKON-iAircon
 EKON iAircon / Tadiran climate component written in Python3 for Home Assistant.
@@ -62,3 +67,17 @@ This component is NOT CURRENTLY added to HACS default repository list.
      logs:
        custom_components.ekon: debug
    ```
+## Troubleshooting
+- No AC Shows up on the Frontend
+  - Q: Did you configured custom UI?
+    - Yes: If so you'll need to add it to your inteface (No clue how, concult the UI dox)
+  - Q: Does the app your working with is working?
+    - No, It says Air condition is not connected to the internet / offline (or similar):
+      The integration might screw up information on the vendor's server. Restart the Wifi box should solve it (See below).
+    - Yes: Are you working with Tadiran app? or with Airconet app?
+      - Tadiran: Did you switch the server url in the config file?
+      - Tadiran: Try switching to Airconet app (See exactly how above Under installation-3); Btw you should anyway use the Airconet app (personal recomendation) 
+      - Airconet: Verify username and password in the config. If still doesn't work, Turn on logs and send me :)
+- How do I restart the wifi box?
+  - Option 1: Switch the Circuit breaker for your entire AC off, wait a few seconds and turn it back on
+  - Option 2: Disconnect the phone cable from the weifi box where it says "to controller" (note: NOT "to display") and connect it back. Wait a couple of minutes, The application should be working again. (Hopefully so will the extension)
