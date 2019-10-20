@@ -1,5 +1,7 @@
 **Update: Just copy custom_components into /config folder, set custom_components permissions, and update your configuration.yaml with Either your EKON Account OR Tadiran connect account.**
 
+SmartThing users, Another guy jused developed a plugin for SmartThings ;) https://github.com/adidamty/smartthings-ekon-plugin
+
 # NOTE THIS IS NOT FULLY TESTED, NO RESPONSIBILITY WHATSOEVER - READ Fully before installing
 Using this component may effect your hass installation stability, may report falsly the state of your HVAC, commands may seem to be working but they might not (such situation where u think you turned off the ac, but it didn't)
 
