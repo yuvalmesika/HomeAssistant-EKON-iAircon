@@ -16,7 +16,7 @@ import os.path
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.components.climate import (ClimateDevice, PLATFORM_SCHEMA)
+from homeassistant.components.climate import (ClimateEntity, PLATFORM_SCHEMA)
 
 from homeassistant.components.climate.const import (
     HVAC_MODE_OFF, HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_DRY,
@@ -244,7 +244,7 @@ class EkonClimateController():
             ekon_state[EKON_PROP_ENVIROMENT_TEMP] = dev_raw[EKON_PROP_ENVIROMENT_TEMP]
             ekon_state[EKON_PROP_TARGET_TEMP] = dev_raw[EKON_PROP_TARGET_TEMP]
 
-class EkonClimate(ClimateDevice):
+class EkonClimate(ClimateEntity):
     #'onoff': 85, 'light': 0, 'mode': 17, 'fan': 1, 'envTemp': 23, 'envTempShow': 23, 'tgtTemp': 24
     def __init__(self, controller, _mac_addr, id, onoff, mode, fan, target_temp, env_temp, env_temp_show, light):
         _LOGGER.info('Initialize the Ekon climate device')
