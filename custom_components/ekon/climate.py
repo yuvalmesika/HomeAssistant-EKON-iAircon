@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # Do basic imports
-import requests
+import aiohttp
 import json
 import time
 import importlib.util
@@ -154,8 +154,7 @@ MAP_FAN_HASS_TO_EKON = {
     FAN_AUTO: 0
 }
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     _LOGGER.info('Setting up Ekon climate platform')
     name = config.get(CONF_NAME)
     base_url = config.get(CONF_URL_BASE)
@@ -164,49 +163,45 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
 
     _LOGGER.info('Creating Ekon climate controller')
-    EkonClimateController(hass, async_add_devices, name, base_url, username, password)
+    
+    controller = EkonClimateController(hass, name, base_url, username, password)
+    _LOGGER.debug('devices')
+    _LOGGER.debug('before login')
+    # Now since I don't have a clue in how to develop inside HASS, I took some ideas and implementation from HASS-sonoff-ewelink
+    if not await controller.do_login():
+        return
+    _LOGGER.debug('after login')
+    await controller.init_devices(async_add_devices)
+    _LOGGER.debug('init devices done')
 
 
 class EkonClimateController():
     """Ekon user account, inside this account there are all the ACs""" 
-    def __init__(self, hass, async_add_devices, name, base_url, username, password):
-        self._http_session = requests.Session()
+    def __init__(self, hass, name, base_url, username, password):
+        self._session = aiohttp.ClientSession() 
         self.hass = hass
-        self._async_add_devices = async_add_devices
         self._name = name
         self._base_url = base_url
         self._username = username
         self._password = password
         self._devices = {}
 
-        # Now since I don't have a clue in how to develop inside HASS, I took some ideas and implementation from HASS-sonoff-ewelink
-        if not self.do_login():
-            return
-
-        for dev_raw in self.query_devices():
-            _LOGGER.info('Adding Ekon climate device to hass')
-            newdev = EkonClimate(self, dev_raw['mac'], dev_raw['id'],
-                dev_raw[EKON_PROP_ONOFF], dev_raw[EKON_PROP_MODE], dev_raw[EKON_PROP_FAN], dev_raw[EKON_PROP_TARGET_TEMP], dev_raw[EKON_PROP_ENVIROMENT_TEMP], dev_raw['envTempShow'], dev_raw['light']
-            )
-            self._devices[dev_raw['mac']] = newdev
-            async_add_devices([newdev])
-
-
-    def query_devices(self):
+    async def query_devices(self):
+        _LOGGER.debug('query_devices')
         """json response .... 'attachment': [< array of hvacs >]"""
         """ Each hvac is like """
         # [{'id': xxx, 'mac': 'xxxxxxxxxxxx', 'onoff': 85, 'light': 0, 'mode': 17, 'fan': 1, 'envTemp': 23, 'envTempShow': 23, 'tgtTemp': 24}]
         url = self._base_url + '/dev/allStatus'
-        result = self._http_session.get(url)
-        if(result.status_code!=200):
-            _LOGGER.error ("Error query_devices")
-            return False
-        attch = json.loads(result.content)['attachment']
-        _LOGGER.info ("query_devices")
-        _LOGGER.info (attch)
-        return attch  
+        async with self._session.get(url) as result:
+            if(result.status !=200):
+                _LOGGER.error ("Error query_devices")
+                return False
+            attch = json.loads(await result.text())['attachment']
+            _LOGGER.info ("query_devices")
+            _LOGGER.info (attch)
+            return attch  
 
-    def do_login(self):
+    async def do_login(self):
         url = self._base_url + 'j_spring_security_check'
         url_params = {
             'username': self._username,
@@ -216,17 +211,26 @@ class EkonClimateController():
             'device-id': '02:00:00:00:00:00',
             'isDebug': 'tRue'
         }
-        result = self._http_session.post(url, params=url_params, data="")
-        if(result.status_code!=200):
-            _LOGGER.error('EKON Login failed! Please check credentials!')
-            _LOGGER.error(result.content)
-            return False
-        _LOGGER.debug('EKON Login Sucsess')
-        return True
+        async with self._session.post(url, params=url_params, data="") as result:
+            if(result.status!=200):
+                _LOGGER.error('EKON Login failed! Please check credentials!')
+                _LOGGER.error(await result.text())
+                return False
+            _LOGGER.debug('EKON Login Sucsess')
+            return True
+    async def init_devices(self,async_add_devices):
+        for dev_raw in await self.query_devices():
+            _LOGGER.debug('Adding Ekon climate device to hass')
+            newdev = EkonClimate(self, dev_raw['mac'], dev_raw['id'],
+                dev_raw[EKON_PROP_ONOFF], dev_raw[EKON_PROP_MODE], dev_raw[EKON_PROP_FAN], dev_raw[EKON_PROP_TARGET_TEMP], dev_raw[EKON_PROP_ENVIROMENT_TEMP], dev_raw['envTempShow'], dev_raw['light']
+            )
+            self._devices[dev_raw['mac']] = newdev
+            async_add_devices([newdev])
 
-    def refreshACs(self):
+ 
+    async def refreshACs(self):
         self._devices
-        for dev_raw in self.query_devices():
+        for dev_raw in await self.query_devices():
             """Refresh the only refreshed stuff 
             'mac': _mac_addr, # We won't sync it; 1-time read.
             'onoff': onoff, 
@@ -303,7 +307,7 @@ class EkonClimate(ClimateEntity):
             self._ekon_state_obj[EKON_PROP_MODE] = MAP_MODE_HASS_TO_EKON[self._hvac_mode]       
         self._ekon_state_obj[EKON_PROP_FAN] = MAP_FAN_HASS_TO_EKON[self._fan_mode]
 
-    def TurnOnOff(self, state):
+    async def TurnOnOff(self, state):
         url = self._controller._base_url + 'dev/switchHvac/' + self._ekon_state_obj["mac"] + '?on='
 
         _LOGGER.info("onoff changed is_on: %r" % state)
@@ -313,59 +317,58 @@ class EkonClimate(ClimateEntity):
         else:
             self._last_on_state = False
             url = url + 'False'
-
-        result = self._controller._http_session.get(url)
-        if(result.status_code!=200):
-            _LOGGER.error(result.content)
-            _LOGGER.error("TurnOnOff (onoff)error")
-            return False
-        return True
+        async with self._controller._session.get(url) as result:
+            if(result.status!=200):
+                _LOGGER.error(await result.text())
+                _LOGGER.error("TurnOnOff (onoff)error")
+                return False
+            return True
         
-    def SyncAndSet(self):
+    async def SyncAndSet(self):
         self.SyncSelfToEkonObj()
         url = self._controller._base_url + 'dev/setHvac'
         # mac, onoff, mode, fan, envtemp, tgttemp, 
         _LOGGER.info('Syncing to remote, state')
         _LOGGER.info(str(json.dumps(self._ekon_state_obj)))
-        result = self._controller._http_session.post(url, json=self._ekon_state_obj)
-        if(result.status_code!=200):
-            _LOGGER.error(result.content)
-            _LOGGER.error("SyncAndSet (properties)error")
-            return False
-        # Damn server has delay/race condition syncing the value we just set, so that it will be the one read next time
-        # In other words, if we setHvac and getDevice immidiatly, values might be the old one, so HA would look like it hadn't changed
-        time.sleep(1)
-        # TODO: Check response json returnCode {"returnCode":0,"values":null} ; 0 OK, -72 Device offiline; -73 see belo. other fail 
-        """                 case -73:
-                                StringBuilder sb = new StringBuilder();
-                                sb.append("temp outrage for device ");
-                                sb.append(cVar);
-                                StringBuilder.m3719b(sb.toString());
-                                JSONArray jSONArray = jSONObject.getJSONArray("values");
-                                if (jSONArray.length() > 0) {
-                                    Album a = Album.m3577a(jSONArray.getJSONObject(0));
-                                    HomePageActivity.this.mo3201b().f2190a.put(a.mo3382h(), a);
-                                    if (a.mo3382h().equals(HomePageActivity.this.f2352x.mo3328c())) {
-                                        HomePageActivity.this.mo3084b(a);
+        async with self._controller._session.post(url, json=self._ekon_state_obj) as result:
+            if(result.status!=200):
+                _LOGGER.error(await result.text())
+                _LOGGER.error("SyncAndSet (properties)error")
+                return False
+            # Damn server has delay/race condition syncing the value we just set, so that it will be the one read next time
+            # In other words, if we setHvac and getDevice immidiatly, values might be the old one, so HA would look like it hadn't changed
+            time.sleep(1)
+            # TODO: Check response json returnCode {"returnCode":0,"values":null} ; 0 OK, -72 Device offiline; -73 see belo. other fail 
+            """                 case -73:
+                                    StringBuilder sb = new StringBuilder();
+                                    sb.append("temp outrage for device ");
+                                    sb.append(cVar);
+                                    StringBuilder.m3719b(sb.toString());
+                                    JSONArray jSONArray = jSONObject.getJSONArray("values");
+                                    if (jSONArray.length() > 0) {
+                                        Album a = Album.m3577a(jSONArray.getJSONObject(0));
+                                        HomePageActivity.this.mo3201b().f2190a.put(a.mo3382h(), a);
+                                        if (a.mo3382h().equals(HomePageActivity.this.f2352x.mo3328c())) {
+                                            HomePageActivity.this.mo3084b(a);
+                                            return;
+                                        }
                                         return;
                                     }
                                     return;
-                                }
-                                return;
-                            case -72:
-                                Context.m3722a(HomePageActivity.this.getString(R.string.device_offline), 0);
-                                imageButton = HomePageActivity.this.f2349u;
-                                break;
-                            default:
-                                Context.m3722a(HomePageActivity.this.getString(R.string.operation_failure), 0);
-                                imageButton = HomePageActivity.this.f2349u;
-                                break;
-        """
-        _LOGGER.info(result.content)
-        return True
+                                case -72:
+                                    Context.m3722a(HomePageActivity.this.getString(R.string.device_offline), 0);
+                                    imageButton = HomePageActivity.this.f2349u;
+                                    break;
+                                default:
+                                    Context.m3722a(HomePageActivity.this.getString(R.string.operation_failure), 0);
+                                    imageButton = HomePageActivity.this.f2349u;
+                                    break;
+            """
+            _LOGGER.info(result.content)
+            return True
     
-    def GetAndSync(self):
-        self._controller.refreshACs()
+    async def GetAndSync(self):
+        await self._controller.refreshACs()
         # Sync in
         self.SyncEkonObjToSelf()
     
@@ -380,10 +383,11 @@ class EkonClimate(ClimateEntity):
             'tgtTemp': self._ekon_state_obj['tgtTemp']
         }
         url = self._controller._base_url + 'dev/setHvac'
-        result = self._controller._http_session.post(json=obj)
-        if(result.status_code!=200):
+        
+        result = asyncio.run(self._session.post(url,json=obj))
+        if(result.status!=200):
             _LOGGER.error("SendStateToAc faild")
-            _LOGGER.errpr(result.content)
+            _LOGGER.error(result.text())
             return False
         return True
 
@@ -393,10 +397,10 @@ class EkonClimate(ClimateEntity):
         # Return the polling state.
         return True
 
-    def update(self):
+    async def async_update(self):
         _LOGGER.info('update()')
         # Update HA State from Device
-        self.GetAndSync()
+        await self.GetAndSync()
 
     @property
     def name(self):
@@ -470,42 +474,41 @@ class EkonClimate(ClimateEntity):
         # Return the list of supported features.
         return SUPPORT_FLAGS        
  
-    def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         _LOGGER.info('set_temperature(): ' + str(kwargs.get(ATTR_TEMPERATURE)))
         # Set new target temperatures.
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             # do nothing if temperature is none
             self._target_temperature = int(kwargs.get(ATTR_TEMPERATURE))
-            self.SyncAndSet()
+            await self.SyncAndSet()
             # I'm not sure what this does in POLLING mode (Should poll True), But I guess it would make HASS
             # Perform a poll update() and refresh new data from the server
             self.schedule_update_ha_state()
 
-    def set_fan_mode(self, fan):
-        _LOGGER.info('set_fan_mode(): ' + str(fan))
+    async def async_set_fan_mode(self, fan_mode):
+        _LOGGER.info('set_fan_mode(): ' + str(fan_mode))
         # Set the fan mode.
-        self._fan_mode = fan
-        self.SyncAndSet()
+        self._fan_mode = fan_mode
+        await self.SyncAndSet()
         self.schedule_update_ha_state()
 
-    def set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode):
         _LOGGER.info('set_hvac_mode(): ' + str(hvac_mode))
         if hvac_mode == HVAC_MODE_OFF:
-            self.TurnOnOff(False)
+            await self.TurnOnOff(False)
             return
         
         # Set new operation mode.
         prev_mode = self._hvac_mode
         self._hvac_mode = hvac_mode
-        self.SyncAndSet()
+        await self.SyncAndSet()
         # And only after turn on? if needed
         if prev_mode==HVAC_MODE_OFF:
             # if was off, turn on after configuring mode
-            self.TurnOnOff(True)
+            await self.TurnOnOff(True)
 
         self.schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         _LOGGER.info('Ekon climate device added to hass()')
-        self.GetAndSync()
+        await self.GetAndSync()
